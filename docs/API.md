@@ -65,6 +65,26 @@ Retrieve previously processed photo analysis results.
 }
 ```
 
+### Delete Analysis and Photos
+```http
+DELETE /photos/analysis/:id
+```
+Delete analysis results and associated photo files from the server.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Analysis and photos deleted successfully",
+  "deletionResults": [
+    {
+      "status": "deleted",
+      "filename": "photos-1692672000000-123456789.jpg"
+    }
+  ]
+}
+```
+
 ### Meal Suggestions
 ```http
 POST /meals/suggestions

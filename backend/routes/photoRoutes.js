@@ -9,4 +9,7 @@ router.post('/upload', upload.array('photos', 5), photoController.uploadPhotos);
 // Get analysis results
 router.get('/analysis/:id', photoController.getAnalysis);
 
+// Delete analysis and photos
+router.delete('/analysis/:id', photoController.deletePhoto);
+
 module.exports = router;
