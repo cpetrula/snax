@@ -1,4 +1,6 @@
 const FoodRecognitionService = require('../services/foodRecognitionService');
+const fs = require('fs');
+const path = require('path');
 
 class PhotoController {
   async uploadPhotos(req, res) {
@@ -54,6 +56,47 @@ class PhotoController {
     } catch (error) {
       console.error('Error getting analysis:', error);
       res.status(500).json({ error: 'Failed to get analysis' });
+    }
+  }
+
+  async deletePhoto(req, res) {
+    try {
+      const { id } = req.params;
+      
+      global.analysisResults = global.analysisResults || {};
+      const analysis = global.analysisResults[id];
+
+      if (!analysis) {
+        return res.status(404).json({ error: 'Analysis not found' });
+      }
+
+      // Delete the physical files
+      const deletionResults = await Promise.allSettled(
+        analysis.photos.map(photo => {
+          return new Promise((resolve, reject) => {
+            fs.unlink(photo.path, (err) => {
+              if (err) {
+                console.warn(`Failed to delete file ${photo.path}:`, err);
+                resolve({ status: 'failed', filename: photo.filename, error: err.message });
+              } else {
+                resolve({ status: 'deleted', filename: photo.filename });
+              }
+            });
+          });
+        })
+      );
+
+      // Remove the analysis from memory
+      delete global.analysisResults[id];
+
+      res.json({
+        success: true,
+        message: 'Analysis and photos deleted successfully',
+        deletionResults: deletionResults.map(result => result.value)
+      });
+    } catch (error) {
+      console.error('Error deleting photos:', error);
+      res.status(500).json({ error: 'Failed to delete photos' });
     }
   }
 }

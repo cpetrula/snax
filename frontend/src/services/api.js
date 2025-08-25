@@ -33,3 +33,8 @@ export const getAnalysis = async (id) => {
   const response = await api.get(`/photos/analysis/${id}`)
   return response.data
 }
+
+export const deletePhotos = async (id) => {
+  const response = await api.delete(`/photos/analysis/${id}`)
+  return response.data
+}

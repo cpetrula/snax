@@ -120,14 +120,26 @@
         <section class="results-section" v-if="mealSuggestions.length > 0">
           <div class="results-header">
             <h2>Suggested Meals & Snacks</h2>
-            <Button 
-              @click="startOver" 
-              icon="pi pi-refresh" 
-              severity="secondary"
-              class="start-over-btn"
-            >
-              Start Over
-            </Button>
+            <div class="header-actions">
+              <Button 
+                @click="deleteAnalysis" 
+                icon="pi pi-trash" 
+                severity="danger"
+                outlined
+                class="delete-btn"
+                :disabled="!currentAnalysisId"
+              >
+                Delete Photos
+              </Button>
+              <Button 
+                @click="startOver" 
+                icon="pi pi-refresh" 
+                severity="secondary"
+                class="start-over-btn"
+              >
+                Start Over
+              </Button>
+            </div>
           </div>
           
           <div class="meals-grid">
@@ -221,7 +233,7 @@ import SelectButton from 'primevue/selectbutton'
 import Checkbox from 'primevue/checkbox'
 import Badge from 'primevue/badge'
 import Dialog from 'primevue/dialog'
-import { uploadPhotos as uploadPhotosAPI, getMealSuggestions as getMealSuggestionsAPI } from './services/api'
+import { uploadPhotos as uploadPhotosAPI, getMealSuggestions as getMealSuggestionsAPI, deletePhotos as deletePhotosAPI } from './services/api'
 
 export default {
   name: 'App',
@@ -243,6 +255,7 @@ export default {
     const mealSuggestions = ref([])
     const selectedMeal = ref(null)
     const showRecipeDialog = ref(false)
+    const currentAnalysisId = ref(null)
 
     const preferences = reactive({
       cookingMethod: null,
@@ -311,6 +324,7 @@ export default {
 
         const response = await uploadPhotosAPI(formData)
         ingredients.value = response.ingredients
+        currentAnalysisId.value = response.analysisId
         analysisComplete.value = true
       } catch (error) {
         console.error('Error uploading photos:', error)
@@ -348,6 +362,7 @@ export default {
       selectedMeal.value = null
       showRecipeDialog.value = false
       analysisComplete.value = false
+      currentAnalysisId.value = null
       isProcessing.value = false
       isGenerating.value = false
       Object.assign(preferences, {
@@ -355,6 +370,19 @@ export default {
         mealTime: null,
         kidFriendly: false
       })
+    }
+
+    const deleteAnalysis = async () => {
+      if (!currentAnalysisId.value) return
+      
+      try {
+        await deletePhotosAPI(currentAnalysisId.value)
+        startOver()
+        alert('Photos and analysis deleted successfully!')
+      } catch (error) {
+        console.error('Error deleting photos:', error)
+        alert('Failed to delete photos. Please try again.')
+      }
     }
 
     return {
@@ -367,6 +395,7 @@ export default {
       mealSuggestions,
       selectedMeal,
       showRecipeDialog,
+      currentAnalysisId,
       preferences,
       cookingMethods,
       mealTypes,
@@ -377,7 +406,8 @@ export default {
       uploadPhotos,
       getMealSuggestions,
       openRecipeDialog,
-      startOver
+      startOver,
+      deleteAnalysis
     }
   }
 }
@@ -602,6 +632,11 @@ export default {
 .results-header h2 {
   color: white;
   margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .meals-grid {
